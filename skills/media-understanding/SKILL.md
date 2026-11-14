@@ -1,6 +1,6 @@
 ---
 name: media-understanding
-description: Understand photos, screenshots, PDFs, GIFs, videos, audio files and YouTube links, including when the host model is text-only. Sends the media to a multimodal model on OpenRouter (default Gemini 4 Hydrogen) and returns the answer as text, transcribes speech word by word with Whisper, and can send dense video frames for frame-level detail. Use whenever the user asks you to look at, watch, listen to, read, describe, analyze, transcribe, summarize or search an image, PDF, video, audio file or video link - what is shown, what is said, when something happens, on-screen text, music or sounds, animation references.
+description: Understand photos, screenshots, PDFs, GIFs, videos, audio files and links to YouTube, TikTok, Vimeo and other video sites, including when the host model is text-only. Sends the media to a multimodal model on OpenRouter (default Gemini 4 Hydrogen) and returns the answer as text, transcribes speech word by word with Whisper, and can send dense video frames for frame-level detail. Use whenever the user asks you to look at, watch, listen to, read, describe, analyze, transcribe, summarize or search an image, PDF, video, audio file or video link - what is shown, what is said, when something happens, on-screen text, music or sounds, animation references.
 ---
 
 # media-understanding
@@ -19,28 +19,28 @@ On Windows use `python` instead of `python3`.
 |---|---|
 | Photo, screenshot, diagram, PDF (any number, mixed) | `python3 $S/ask.py a.jpg report.pdf -q "..."` |
 | What happens in a video or GIF: summary, events, text on screen, long footage | `python3 $S/ask.py video.mp4 -q "..."` |
-| A YouTube link | `python3 $S/ask.py https://youtu.be/... -q "..."` |
+| A link to YouTube, TikTok, Vimeo, X, Instagram, Reddit, Rutube... | `python3 $S/ask.py https://youtu.be/... -q "..."` |
 | Audio: music, tone, sounds, speakers, content | `python3 $S/ask.py audio.mp3 -q "..."` |
 | Exact words, quotes, subtitles, word timing | `python3 $S/transcribe.py file` |
 | Frame-level detail: animation or motion reference, exact timing, verifying one moment | `python3 $S/ask.py video.mp4 --frames 0.2 --start 12 --end 15 -q "..."` |
 | Same, if you can view images yourself | `python3 $S/frames.py video.mp4 --start 12 --end 15 --every 0.2`, then `Read` the sheets |
 
-Local files and `http(s)` links both work (links are downloaded first, up to 1 GB). Ask everything you need in one question; answers are paid by output length. Do not repeat a request on the same media without a reason.
+Local files and `http(s)` links both work. A direct link to a file is downloaded as it is (up to 1 GB). A page of a video site is downloaded with `yt-dlp` (up to 720p; if it is missing, the script prints how to install it; sites that require a login cannot be fetched). A YouTube link is sent to the model as it is, without downloading, unless `--start`, `--end`, `--frames` or `transcribe.py` need the file. Ask everything you need in one question; answers are paid by output length. Do not repeat a request on the same media without a reason.
 
 ## ask.py
 
-`ask.py INPUT... -q QUESTION`: any number of images and PDFs, or exactly one video, audio file or YouTube link. The answer comes in the language of the question.
+`ask.py INPUT... -q QUESTION`: any number of images and PDFs, or exactly one video, audio file or video link. The answer comes in the language of the question.
 
 - **Images** over 4 MB or in other formats (bmp, tiff, heic...) are converted to JPEG, long side at most 2048 px. **PDFs** go as they are (up to 30 MB each).
 - **Video and GIF** are compressed (short side 480 px, 8 fps, crf 30, mono audio) and sent whole, picture and sound together. Media over `--max-mb` (30) or `--max-min` (30) is split into equal parts sent as separate requests (3 in parallel). Each answer is printed under `=== PART i/n (starts at H:MM:SS ...) ===`, and a single clip trimmed with `--start` under `=== TRIMMED CLIP (starts at ...) ===`; **times inside an answer are relative to that part or clip, so add the offset**. The model does not see other parts, so phrase the question to work per part ("list every moment where...").
 - **Audio** is encoded to mono mp3 and cut at pauses when long.
 - **`--frames STEP`** sends frames every STEP seconds as images, each preceded by its timestamp (up to `--max-frames` 48). Narrow the range with `--start`/`--end`; `--height 720` for finer detail.
-- `--start` and `--end` trim any local video or audio (not YouTube). `--model` switches the model. `--dry-run` prepares the media and prints the plan without sending anything.
+- `--start` and `--end` trim any video or audio (a link is downloaded first). `--model` switches the model. `--dry-run` prepares the media and prints the plan without sending anything.
 - Quality: `--height 0 --fps 0 --crf 24` keeps the source size and frame rate. `--processing agentic` lets Gemini navigate long videos itself but routes to Google AI Studio, which rejects requests over 20 MB, so parts are capped at 14 MB (many parts for long videos).
 
 ## transcribe.py
 
-`transcribe.py FILE_OR_LINK [--lang ru|en|...]` (default: auto-detect) extracts the audio, cuts it at pauses, sends the chunks to `openai/whisper-large-v3` (3 in parallel) and prints phrases as `[MM:SS] text`. `--out DIR` also saves `transcript.json` (words with start/end) and `transcript.srt`. Whisper can invent lines during silence (for example subtitle credits); ignore them. It does not take YouTube links.
+`transcribe.py FILE_OR_LINK [--lang ru|en|...]` (default: auto-detect) extracts the audio, cuts it at pauses, sends the chunks to `openai/whisper-large-v3` (3 in parallel) and prints phrases as `[MM:SS] text`. `--out DIR` also saves `transcript.json` (words with start/end) and `transcript.srt`. Whisper can invent lines during silence (for example subtitle credits); ignore them. Links work as well, including YouTube and other video sites.
 
 ## Long media
 

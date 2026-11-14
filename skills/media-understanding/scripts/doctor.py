@@ -13,6 +13,7 @@ import subprocess
 from pathlib import Path
 
 from ask import DEFAULT_MODEL
+from download import YTDLP_HELP, ytdlp_command
 from media import run
 from openrouter import GENERIC_KEY_ENV, KEY_ENV, get_json
 from util import configure_stdio, scratch_dir
@@ -47,6 +48,14 @@ def check_pillow() -> None:
         print("[ok] Pillow (optional, for frames.py)")
     except ImportError:
         print("[--] Pillow not installed (optional, only for frames.py): pip install pillow")
+
+
+def check_ytdlp() -> None:
+    command = ytdlp_command()
+    if command is None:
+        print(f"[--] yt-dlp not installed (optional, for links to TikTok, Vimeo, Instagram, X...): {YTDLP_HELP}")
+        return
+    print(f"[ok] yt-dlp {run([*command, '--version']).stdout.strip()} (optional, for links to video sites)")
 
 
 def check_key() -> str | None:
@@ -105,6 +114,7 @@ def main() -> None:
 
     results = [check_python(), check_ffmpeg()]
     check_pillow()
+    check_ytdlp()
     key = check_key()
     results.append(key is not None)
     if key:

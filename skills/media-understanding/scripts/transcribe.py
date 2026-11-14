@@ -15,7 +15,7 @@ from functools import partial
 from pathlib import Path
 from typing import NamedTuple
 
-from download import is_youtube, local_input
+from download import local_input
 from media import Chunk, Window, audio_chunks, probe
 from openrouter import api_key, post_json
 from util import clock, configure_stdio, fail, log, require_tools, scratch_dir
@@ -103,7 +103,7 @@ def save(directory: Path, model: str, words: list[Word], phrases: list[list[Word
 def main() -> None:
     configure_stdio()
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("input", help="audio or video file, or a link to one")
+    parser.add_argument("input", help="audio or video file, or a link (file, YouTube, TikTok, ...)")
     parser.add_argument("--lang", default="auto", help="ISO code such as en or ru; auto detects")
     parser.add_argument("--chunk", type=float, default=240, help="target chunk length in seconds")
     parser.add_argument("--model", default=DEFAULT_MODEL)
@@ -111,13 +111,11 @@ def main() -> None:
     parser.add_argument("--out", type=Path, help="also save transcript.json and transcript.srt here")
     args = parser.parse_args()
 
-    if is_youtube(args.input):
-        fail("YouTube links are supported by ask.py only (download the audio first to transcribe it)")
     require_tools("ffmpeg", "ffprobe")
     key = api_key()
 
     with scratch_dir("media_transcribe_") as workdir:
-        source = local_input(args.input, workdir)
+        source = local_input(args.input, workdir, audio_only=True)
         info = probe(source)
         if not info.has_audio:
             fail("the file has no audio track")

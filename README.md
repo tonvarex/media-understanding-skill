@@ -1,6 +1,6 @@
 # media-understanding
 
-Agent skill that gives any LLM native-like understanding of **images, PDFs, GIFs, videos, audio and YouTube links** through [OpenRouter](https://openrouter.ai), even when the model itself is text-only.
+Agent skill that gives any LLM native-like understanding of **images, PDFs, GIFs, videos, audio and links to YouTube, TikTok, Vimeo, Instagram, X, Reddit, Rutube and more** through [OpenRouter](https://openrouter.ai), even when the model itself is text-only.
 
 The agent runs one command, the media goes to a multimodal model (Gemini 4 Hydrogen by default), and the answer comes back as text. Exact speech comes from Whisper, word by word.
 
@@ -43,7 +43,7 @@ setx MUS_OPENROUTER_API_KEY "sk-or-..."
 **3. Install the skill**
 
 ```bash
-npx skills add tonvarex/media-understanding-skill
+npx skills add tonvarex/media-understanding-skill -g
 ```
 
 **4. Restart your agent and check the setup**
@@ -64,15 +64,38 @@ python <skill folder>\scripts\doctor.py --live
 
 Then just ask your agent: "what's in this screenshot?", "summarize this video", "what did the speaker say at 12:40?".
 
+### Optional: links to video sites
+
+YouTube and direct file links work out of the box. For pages of TikTok, Vimeo, Instagram, X, Reddit, Rutube and other video sites the skill downloads the video with [yt-dlp](https://github.com/yt-dlp/yt-dlp):
+
+macOS:
+
+```bash
+brew install yt-dlp
+```
+
+Linux:
+
+```bash
+pip install yt-dlp
+```
+
+Windows (PowerShell):
+
+```powershell
+winget install yt-dlp
+```
+
 ## Features
 
-- **Everything in one skill**: photos, screenshots, PDFs, GIFs, videos, audio, YouTube links and plain URLs
+- **Everything in one skill**: photos, screenshots, PDFs, GIFs, videos, audio and links
+- **Links to popular video sites**: YouTube goes straight to the model, TikTok, Vimeo, Instagram, X, Reddit, Rutube and the rest of what yt-dlp supports are downloaded and sent automatically; trimming, `--frames` and transcription work on links too
 - **Picture and sound together**: a video is understood as a whole, with its audio track, not as a silent slideshow
 - **Works with text-only models**: the agent never has to view an image itself
 - **Long media just works**: big files are compressed, cut into parts, processed in parallel, and the timestamps are shifted back for you (a 2 hour video takes about 6 minutes)
 - **Frame-level mode**: `--frames 0.2` sends dense timestamped frames of a short range, for animation references, exact timing and verifying a single moment
 - **Word-level transcription**: Whisper with per-word timing, long audio cut at pauses, saves `transcript.json` and `transcript.srt`
-- **Zero Python dependencies**: standard library plus ffmpeg, no SDKs, no `pip install`
+- **Zero Python dependencies**: standard library plus ffmpeg, no SDKs, no `pip install` (yt-dlp only if you use video-site links)
 - **One key, one variable**: `MUS_OPENROUTER_API_KEY`, nothing is written to disk
 - **Built-in `doctor.py`**: checks Python, ffmpeg, the key, the account balance and the model, and tells you how to fix what is wrong
 - **Clear errors and progress**: bad key, no credit, wrong file type, rate limits all say what to do
@@ -86,6 +109,8 @@ Then just ask your agent: "what's in this screenshot?", "summarize this video", 
 | Exact motion timing | `--frames` mode (the model samples video only about once per second) |
 | iPhone photos (HEIC), BMP, TIFF, huge images | Converted to JPEG automatically |
 | Animated GIF / WebP | Treated as video, not as one frame |
+| A link to a TikTok, Vimeo, Instagram, X, Reddit... video | Downloaded with yt-dlp, then handled like a local file |
+| A YouTube link and you need a trim, frames or a transcript | Downloaded automatically, otherwise sent to the model as it is |
 | Voice notes and music | Understood by the model, or transcribed word by word |
 
 ## Installation
@@ -93,10 +118,10 @@ Then just ask your agent: "what's in this screenshot?", "summarize this video", 
 ### With the skills CLI (recommended)
 
 ```bash
-npx skills add tonvarex/media-understanding-skill
+npx skills add tonvarex/media-understanding-skill -g
 ```
 
-The CLI asks which agents to install for and whether to install globally or into the current project.
+The CLI asks which agents to install for.
 
 ### Manual
 
@@ -120,6 +145,7 @@ python3 $S/ask.py report.pdf -q "Summarize the key numbers"
 # Video, GIF, YouTube
 python3 $S/ask.py talk.mp4 -q "List the main points with timestamps"
 python3 $S/ask.py https://youtu.be/VIDEO_ID -q "What is this video about?"
+python3 $S/ask.py https://www.tiktok.com/@user/video/123 -q "What happens in this video?"
 
 # Audio: music, tone, speakers
 python3 $S/ask.py voice.ogg -q "What do I need to do?"
@@ -129,6 +155,7 @@ python3 $S/ask.py demo.mp4 --frames 0.25 --start 12 --end 15 -q "How does the me
 
 # Exact words with timing
 python3 $S/transcribe.py interview.mp3 --lang en --out ./transcript
+python3 $S/transcribe.py https://youtu.be/VIDEO_ID
 ```
 
 On Windows use `python` instead of `python3`.
@@ -137,8 +164,8 @@ On Windows use `python` instead of `python3`.
 
 | Script | What it does |
 |---|---|
-| `ask.py` | Ask a question about images, PDFs, a video, GIF, audio file or YouTube link |
-| `transcribe.py` | Word-level transcription with Whisper, optional `.json` and `.srt` |
+| `ask.py` | Ask a question about images, PDFs, a video, GIF, audio file or a video link |
+| `transcribe.py` | Word-level transcription of a file or link with Whisper, optional `.json` and `.srt` |
 | `frames.py` | Contact sheets of timestamped frames, for agents that can view images (needs Pillow) |
 | `doctor.py` | Checks the installation, `--live` sends one tiny test request |
 

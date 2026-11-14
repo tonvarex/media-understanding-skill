@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Ask a multimodal model about images, PDFs, a video, an audio file or a YouTube link; get text back."""
+"""Ask a multimodal model about images, PDFs, a video or audio file, or a video link; get text back."""
 from __future__ import annotations
 
 import sys
@@ -108,10 +108,14 @@ def part_note(number: int, total: int) -> str:
     return f"This is part {number} of {total} of a longer recording; answer only about this part."
 
 
-def resolve_sources(inputs: list[str], workdir: Path) -> list[Source]:
+def needs_local_file(args: argparse.Namespace) -> bool:
+    return bool(args.frames) or args.start is not None or args.end is not None
+
+
+def resolve_sources(inputs: list[str], workdir: Path, local_only: bool) -> list[Source]:
     sources = []
     for value in inputs:
-        if is_url(value) and is_youtube(value):
+        if not local_only and is_url(value) and is_youtube(value):
             sources.append(Source("youtube", url=value))
         else:
             path = local_input(value, workdir)
@@ -219,8 +223,6 @@ def chunk_jobs(kind: str, chunks: list[Chunk], window: Window, question: str,
 
 
 def youtube_job(url: str, question: str, args: argparse.Namespace) -> Job:
-    if args.frames or args.start is not None or args.end is not None:
-        fail("--frames, --start and --end need a local file: download the video first")
     parts = [text_part(user_text(question)), video_part(url, args.processing)]
     return Job("video", "", 0, lambda: parts)
 
@@ -229,7 +231,7 @@ def build_jobs(args: argparse.Namespace, sources: list[Source], workdir: Path) -
     if all(source.kind in {"image", "document"} for source in sources):
         return [attachment_job(sources, args.question, workdir)]
     if len(sources) != 1:
-        fail("pass any number of images and PDFs, or exactly one video, audio file or YouTube link")
+        fail("pass any number of images and PDFs, or exactly one video, audio file or video link")
 
     source = sources[0]
     if source.kind == "youtube":
@@ -275,7 +277,7 @@ def usage_summary(model: str, usages: list[dict]) -> str:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("inputs", nargs="+",
-                        help="image/PDF files or links, or one video, audio file, or YouTube link")
+                        help="image/PDF files or links, or one video or audio file or link (YouTube, TikTok, ...)")
     parser.add_argument("-q", "--question", required=True)
     parser.add_argument("--model", default=DEFAULT_MODEL, help="default: $MUS_MODEL or %(default)s")
     parser.add_argument("--start", type=float, help="trim start, seconds")
@@ -312,7 +314,7 @@ def main() -> None:
     key = None if args.dry_run else api_key()
 
     with scratch_dir("media_ask_") as workdir:
-        jobs = build_jobs(args, resolve_sources(args.inputs, workdir), workdir)
+        jobs = build_jobs(args, resolve_sources(args.inputs, workdir, needs_local_file(args)), workdir)
         if args.dry_run:
             for number, job in enumerate(jobs, 1):
                 print(f"part {number}/{len(jobs)}: {job.size / 1e6:.1f} MB {job.header}".rstrip())
