@@ -8,7 +8,7 @@ description: Understand photos, screenshots, PDFs, GIFs, videos, audio files and
 The media goes to a multimodal model and comes back as text, so this works even if you cannot view images or play audio yourself. Do not open images, frame sheets or videos with `Read` unless you are sure you can view images; use `ask.py`.
 
 ```bash
-S=<skill folder>/scripts    # Claude Code: ~/.claude/skills/media-understanding/scripts
+S=<skill folder>/scripts    # the scripts folder next to this SKILL.md
 python3 $S/doctor.py        # first use, or whenever something fails; add --live for a tiny end-to-end request
 ```
 On Windows use `python` instead of `python3`.

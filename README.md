@@ -40,10 +40,10 @@ Windows (PowerShell):
 setx MUS_OPENROUTER_API_KEY "sk-or-..."
 ```
 
-**3. Install the skill** (`-a claude-code` is the agent to install for, `-g` makes it available in all projects instead of only the current one)
+**3. Install the skill**
 
 ```bash
-npx skills add tonvarex/media-understanding-skill -a claude-code -g
+npx skills add tonvarex/media-understanding-skill
 ```
 
 **4. Restart your agent and check the setup**
@@ -51,14 +51,16 @@ npx skills add tonvarex/media-understanding-skill -a claude-code -g
 macOS / Linux:
 
 ```bash
-python3 ~/.claude/skills/media-understanding/scripts/doctor.py --live
+python3 <skill folder>/scripts/doctor.py --live
 ```
 
 Windows (PowerShell):
 
 ```powershell
-python $env:USERPROFILE\.claude\skills\media-understanding\scripts\doctor.py --live
+python <skill folder>\scripts\doctor.py --live
 ```
+
+`<skill folder>` is the `media-understanding` folder inside your agent's skills directory.
 
 Then just ask your agent: "what's in this screenshot?", "summarize this video", "what did the speaker say at 12:40?".
 
@@ -91,23 +93,17 @@ Then just ask your agent: "what's in this screenshot?", "summarize this video", 
 ### With the skills CLI (recommended)
 
 ```bash
-npx skills add tonvarex/media-understanding-skill -a claude-code -g
+npx skills add tonvarex/media-understanding-skill
 ```
+
+The CLI asks which agents to install for and whether to install globally or into the current project.
 
 ### Manual
 
+Clone the repository and copy `skills/media-understanding` into your agent's skills directory.
+
 ```bash
 git clone https://github.com/tonvarex/media-understanding-skill.git
-mkdir -p ~/.claude/skills
-cp -R media-understanding-skill/skills/media-understanding ~/.claude/skills/
-```
-
-On Windows (PowerShell):
-
-```powershell
-git clone https://github.com/tonvarex/media-understanding-skill.git
-Copy-Item -Recurse media-understanding-skill\skills\media-understanding $env:USERPROFILE\.claude\skills\
-setx MUS_OPENROUTER_API_KEY "sk-or-..."
 ```
 
 Restart the agent after setting the variable: a running session keeps its old environment, and apps started from the Dock, Finder or Start menu do not read shell profiles (start the agent from a terminal, or set the variable system-wide).
@@ -115,7 +111,7 @@ Restart the agent after setting the variable: a running session keeps its old en
 ## Usage
 
 ```bash
-S=~/.claude/skills/media-understanding/scripts
+S=<skill folder>/scripts
 
 # Images and PDFs, any number
 python3 $S/ask.py before.png after.png -q "List every visual difference"
