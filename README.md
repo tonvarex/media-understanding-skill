@@ -6,18 +6,58 @@ The agent runs one command, the media goes to a multimodal model (Gemini 4 Hydro
 
 ## Quick Start
 
+**1. Install ffmpeg** (Python 3.9+ is the only other requirement)
+
+macOS:
+
 ```bash
-# 1. Install ffmpeg (Python 3.9+ is the only other requirement)
-brew install ffmpeg          # macOS; Linux: sudo apt install ffmpeg; Windows: winget install ffmpeg
+brew install ffmpeg
+```
 
-# 2. Get a key at https://openrouter.ai/keys and set it (add to ~/.zshrc or ~/.bashrc)
+Linux (Debian/Ubuntu):
+
+```bash
+sudo apt install ffmpeg
+```
+
+Windows (PowerShell):
+
+```powershell
+winget install ffmpeg
+```
+
+**2. Get a key at [openrouter.ai/keys](https://openrouter.ai/keys) and set it**
+
+macOS / Linux: add this line to `~/.zshrc` or `~/.bashrc`:
+
+```bash
 export MUS_OPENROUTER_API_KEY="sk-or-..."
+```
 
-# 3. Install the skill
+Windows (PowerShell):
+
+```powershell
+setx MUS_OPENROUTER_API_KEY "sk-or-..."
+```
+
+**3. Install the skill** (`-a claude-code` is the agent to install for, `-g` makes it available in all projects instead of only the current one)
+
+```bash
 npx skills add tonvarex/media-understanding-skill -a claude-code -g
+```
 
-# 4. Restart your agent and check the setup
+**4. Restart your agent and check the setup**
+
+macOS / Linux:
+
+```bash
 python3 ~/.claude/skills/media-understanding/scripts/doctor.py --live
+```
+
+Windows (PowerShell):
+
+```powershell
+python $env:USERPROFILE\.claude\skills\media-understanding\scripts\doctor.py --live
 ```
 
 Then just ask your agent: "what's in this screenshot?", "summarize this video", "what did the speaker say at 12:40?".
